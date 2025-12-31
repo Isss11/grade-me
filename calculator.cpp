@@ -4,12 +4,19 @@
 #include <cstring>
 #include <vector>
 #include <iomanip>
+#include <optional>
 using namespace std;
 
 struct Course {
     string code;
     string semester;
     int mark;
+};
+
+// Using 'struct' strategy to deal with many parameters that may/may not be defined
+struct CGPA_Parameters {
+    optional <string> subject;
+    optional <string> semester;
 };
 
 int read_from_file(char * file_name, vector<Course> &courses) {
@@ -76,22 +83,35 @@ int get_grade_by_course_code(string course_code, vector<Course> &courses) {
     return mark;
 }
 
-
-// Computes the CGPA
-float compute_cgpa(vector<Course> &courses) {
-    float cgpa = 0;
-    int n_courses = courses.size();
-
-    for (int i = 0; i < n_courses; ++i) {
-        cgpa += courses[i].mark;
+bool is_course_valid(Course course, CGPA_Parameters conditions) {
+    // TODO: Validate based on course subject (do this after using a class for courses)
+    if (conditions.semester == nullopt || strcmp(conditions.semester.value().c_str(), course.semester.c_str()) == 0) {
+        return true;
     }
 
-    cgpa /= n_courses;
+    return false;
+}
+
+// Computes the CGPA based on conditions provided
+float compute_cgpa(vector<Course> &courses, CGPA_Parameters conditions) {
+    float cgpa = 0;
+    int n_courses = courses.size();
+    int n_valid_courses = 0; // courses that validate the specified conditions
+
+    for (int i = 0; i < n_courses; ++i) {
+        if (is_course_valid(courses[i], conditions)) {
+            cgpa += courses[i].mark;
+            n_valid_courses += 1;
+        }
+    }
+
+    cgpa /= n_valid_courses;
     
     return cgpa;
 }
 
 // Computes the CGPA for a specific course subject type (i.e. Mathematics)
+// TODO
 float compute_subject_cgpa(string subject_code, vector<Course> &courses) {
     cout << "Compute subject CPGA!\n";
     return 0.0;
@@ -99,8 +119,9 @@ float compute_subject_cgpa(string subject_code, vector<Course> &courses) {
 
 // Computes semester GPA
 float compute_semester_gpa(string semester_code, vector<Course> &courses) {
-    cout << "Compute semester CGPA!\n";
-    return 0.0;
+    CGPA_Parameters conditions = {nullopt, semester_code};
+
+    return compute_cgpa(courses, conditions);
 }
 
 // Accepts menu options and runs program functions
@@ -131,8 +152,9 @@ void run_menu_options(vector<Course> &courses) {
             }
         } else if (strcmp(input.c_str(), "c") == 0) {
             float cgpa;
+            CGPA_Parameters conditions;
 
-            cgpa = compute_cgpa(courses);
+            cgpa = compute_cgpa(courses, conditions);
 
             cout << "The student's cGPA is: " << fixed << setprecision(2) << cgpa << "%.\n";
         } else if (strcmp(input.c_str(), "cs") == 0) {
@@ -144,11 +166,13 @@ void run_menu_options(vector<Course> &courses) {
             compute_subject_cgpa(subject_code, courses);
         } else if (strcmp(input.c_str(), "ce") == 0) {
             string semester_code;
+            float gpa;
 
-            cout << "Enter a semester code (i.e. W25): ";
+            cout << "Enter a semester code (i.e. F25): ";
             cin >> semester_code;
 
-            compute_semester_gpa(semester_code, courses);
+            gpa = compute_semester_gpa(semester_code, courses);
+            cout << "The student's " << semester_code << " semester GPA is: " << fixed << setprecision(2) << gpa << "%.\n";
         } else {
             if (strcmp(input.c_str(), "q") != 0) {
                 cout << "Invalid option entered.\n";
