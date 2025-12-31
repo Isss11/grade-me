@@ -14,7 +14,7 @@ struct Course {
 };
 
 // Using 'struct' strategy to deal with many parameters that may/may not be defined
-struct CGPA_Parameters {
+struct Course_Conditions {
     optional <string> subject;
     optional <string> semester;
 };
@@ -83,17 +83,34 @@ int get_grade_by_course_code(string course_code, vector<Course> &courses) {
     return mark;
 }
 
-bool is_course_valid(Course course, CGPA_Parameters conditions) {
-    // TODO: Validate based on course subject (do this after using a class for courses)
-    if (conditions.semester == nullopt || strcmp(conditions.semester.value().c_str(), course.semester.c_str()) == 0) {
-        return true;
+// Takes a course code (i.e. MATH*1210) and extracts the subject code (i.e. MATH)
+string get_extracted_subject_code(string course_code) {
+    // For 3 character subject codes i.e. CIS*1300
+    if (course_code[3] == '*') {
+        return course_code.substr(0, 3);
     }
 
-    return false;
+    // Assuming rest are 4 character subject codes (i.e. MATH*1210)
+    return course_code.substr(0, 4);
 }
 
-// Computes the CGPA based on conditions provided
-float compute_cgpa(vector<Course> &courses, CGPA_Parameters conditions) {
+bool is_course_valid(Course course, Course_Conditions conditions) {
+    bool is_subject_valid = false;
+    bool is_semester_valid = false;
+
+    if (conditions.subject == nullopt || get_extracted_subject_code(conditions.subject.value()).compare(get_extracted_subject_code(course.code)) == 0) {
+        is_subject_valid = true;
+    }
+
+    if (conditions.semester == nullopt || conditions.semester.value().compare(course.semester.c_str()) == 0) {
+        is_semester_valid = true;
+    }
+
+    return is_subject_valid && is_semester_valid;
+}
+
+// Computes the GPA based on conditions provided
+float compute_gpa(vector<Course> &courses, Course_Conditions conditions) {
     float cgpa = 0;
     int n_courses = courses.size();
     int n_valid_courses = 0; // courses that validate the specified conditions
@@ -110,18 +127,20 @@ float compute_cgpa(vector<Course> &courses, CGPA_Parameters conditions) {
     return cgpa;
 }
 
-// Computes the CGPA for a specific course subject type (i.e. Mathematics)
-// TODO
-float compute_subject_cgpa(string subject_code, vector<Course> &courses) {
-    cout << "Compute subject CPGA!\n";
-    return 0.0;
+// Computes the GPA for a specific course subject type (i.e. Mathematics)
+float compute_subject_gpa(string subject_code, vector<Course> &courses) {
+    Course_Conditions conditions;
+    conditions.subject = subject_code;
+
+    return compute_gpa(courses, conditions);
 }
 
 // Computes semester GPA
 float compute_semester_gpa(string semester_code, vector<Course> &courses) {
-    CGPA_Parameters conditions = {nullopt, semester_code};
+    Course_Conditions conditions;
+    conditions.semester = semester_code;
 
-    return compute_cgpa(courses, conditions);
+    return compute_gpa(courses, conditions);
 }
 
 // Accepts menu options and runs program functions
@@ -152,18 +171,20 @@ void run_menu_options(vector<Course> &courses) {
             }
         } else if (strcmp(input.c_str(), "c") == 0) {
             float cgpa;
-            CGPA_Parameters conditions;
+            Course_Conditions conditions;
 
-            cgpa = compute_cgpa(courses, conditions);
+            cgpa = compute_gpa(courses, conditions);
 
             cout << "The student's cGPA is: " << fixed << setprecision(2) << cgpa << "%.\n";
         } else if (strcmp(input.c_str(), "cs") == 0) {
             string subject_code;
+            float gpa;
 
             cout << "Enter a subject code (i.e. 'MATH'): ";
             cin >> subject_code;
 
-            compute_subject_cgpa(subject_code, courses);
+            gpa = compute_subject_gpa(subject_code, courses);
+            cout << "The student's subject specific GPA for '" << subject_code << "' courses is: " << fixed << setprecision(2) << gpa << "%.\n";
         } else if (strcmp(input.c_str(), "ce") == 0) {
             string semester_code;
             float gpa;
