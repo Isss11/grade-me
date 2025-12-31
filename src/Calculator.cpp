@@ -1,24 +1,10 @@
-#include <iostream>
-#include <string>
-#include <fstream>
-#include <cstring>
-#include <vector>
-#include <iomanip>
-#include <optional>
-using namespace std;
-
-struct Course {
-    string code;
-    string semester;
-    int mark;
-    float weight;
-};
-
-// Using 'struct' strategy to deal with many parameters that may/may not be defined
-struct Course_Conditions {
-    optional <string> subject;
-    optional <string> semester;
-};
+#include "../include/header.h"
+/*
+TODO:
+1. Turn Course into a class, with methods for some of the existing functionality.
+2. Turn the calculator functionality into a class.
+3. Create instances of the Courses and the Calculator in a runner file, and call them from there.
+*/
 
 int read_from_file(char * file_name, vector<Course> &courses) {
     string line;
@@ -83,32 +69,6 @@ int get_grade_by_course_code(string course_code, vector<Course> &courses) {
     return mark;
 }
 
-// Takes a course code (i.e. MATH*1210) and extracts the subject code (i.e. MATH)
-string get_extracted_subject_code(string course_code) {
-    // For 3 character subject codes i.e. CIS*1300
-    if (course_code[3] == '*') {
-        return course_code.substr(0, 3);
-    }
-
-    // Assuming rest are 4 character subject codes (i.e. MATH*1210)
-    return course_code.substr(0, 4);
-}
-
-bool is_course_valid(Course course, Course_Conditions conditions) {
-    bool is_subject_valid = false;
-    bool is_semester_valid = false;
-
-    if (conditions.subject == nullopt || get_extracted_subject_code(conditions.subject.value()).compare(get_extracted_subject_code(course.code)) == 0) {
-        is_subject_valid = true;
-    }
-
-    if (conditions.semester == nullopt || conditions.semester.value().compare(course.semester.c_str()) == 0) {
-        is_semester_valid = true;
-    }
-
-    return is_subject_valid && is_semester_valid;
-}
-
 // Computes the GPA based on conditions provided
 float compute_gpa(vector<Course> &courses, Course_Conditions conditions) {
     float gpa = 0;
@@ -116,7 +76,7 @@ float compute_gpa(vector<Course> &courses, Course_Conditions conditions) {
     float total_weightage = 0; // courses that validate the specified conditions
 
     for (int i = 0; i < n_courses; ++i) {
-        if (is_course_valid(courses[i], conditions)) {
+        if (courses[i].is_course_valid(conditions)) {
             gpa += courses[i].mark * courses[i].weight;
             total_weightage += courses[i].weight;
         }
