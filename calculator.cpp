@@ -3,6 +3,7 @@
 #include <fstream>
 #include <cstring>
 #include <vector>
+#include <iomanip>
 using namespace std;
 
 struct Course {
@@ -17,12 +18,33 @@ int read_from_file(char * file_name, vector<Course> &courses) {
 
     // Use a while loop to read CSV file line by line
     while (getline (fp, line)) {
-        cout << line << "\n";
-        
-        // Parse line
-        string course_code = line.substr(0, 8);
-        int mark = stoi(line.substr(10, 2));
-        string semester = line.substr(13, 3);
+        // Parse line into a course structure
+        // Handling for 8 character and 9 character course codes
+        int course_code_len;
+        int mark_len;
+
+        if (line[8] == ',') {
+            course_code_len = 8;
+        } else {
+            course_code_len = 9;
+        }
+
+        string course_code = line.substr(0, course_code_len);
+
+        // Now determine if the mark is listed as 1, 2, or 3 digits (i.e. 0%, 55%, 100%)
+        if (line[course_code_len + 2] == ',') {
+            mark_len = 1;
+        } else if (line[course_code_len + 3] == ',') {
+            mark_len = 2;
+        // Assuming that this is 100% (3 characters)
+        } else {
+            mark_len = 3;
+        }
+
+        int mark = stoi(line.substr(course_code_len + 1, mark_len));
+        string semester = line.substr(course_code_len + mark_len + 2, 3);
+
+        cout << course_code << " " << mark << " " << semester << "\n";
 
         courses.push_back({course_code, semester, mark});
     }
@@ -36,14 +58,37 @@ int read_from_file(char * file_name, vector<Course> &courses) {
 
 // Obtains the grade by course code
 int get_grade_by_course_code(string course_code, vector<Course> &courses) {
-    cout << "Search!\n";
-    return 0;
+    int mark, i;
+
+    mark = -1;
+
+    // Use linear search to obtain the course mark
+    i = 0;
+
+    // Iterates until a mark is found or until all the courses have been iterated through
+    while (i < courses.size() && mark < 0) {
+        cout << courses[i].code.c_str();
+        if (strcmp(courses[i].code.c_str(), course_code.c_str()) == 0) {
+            mark = courses[i].mark;
+        }
+    }
+
+    return mark;
 }
 
-// Computes the CGPA for the student
+
+// Computes the CGPA
 float compute_cgpa(vector<Course> &courses) {
-    cout << "Compute CGPA!\n";
-    return 0.0;
+    float cgpa = 0;
+    int n_courses = courses.size();
+
+    for (int i = 0; i < n_courses; ++i) {
+        cgpa += courses[i].mark;
+    }
+
+    cgpa /= n_courses;
+    
+    return cgpa;
 }
 
 // Computes the CGPA for a specific course subject type (i.e. Mathematics)
@@ -70,13 +115,26 @@ void run_menu_options(vector<Course> &courses) {
 
         if (strcmp(input.c_str(), "s") == 0) {
             string course_code;
+            int course_mark;
 
             cout << "Enter a course code (i.e. CIS*1300): ";
             cin >> course_code;
+            cout << "\n";
 
-            get_grade_by_course_code(course_code, courses);
+            course_mark = get_grade_by_course_code(course_code, courses);
+
+            // Input validation
+            if (course_mark < 0) {
+                cout << "The course with the code '" << course_code << "', does not exist. No mark was retrieved.\n";
+            } else {
+                cout << course_mark << "%\n";
+            }
         } else if (strcmp(input.c_str(), "c") == 0) {
-            compute_cgpa(courses);
+            float cgpa;
+
+            cgpa = compute_cgpa(courses);
+
+            cout << "The student's cGPA is: " << fixed << setprecision(2) << cgpa << "%.\n";
         } else if (strcmp(input.c_str(), "cs") == 0) {
             string subject_code;
 
