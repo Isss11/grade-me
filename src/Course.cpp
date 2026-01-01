@@ -33,6 +33,7 @@ bool Course::is_course_valid(Course_Conditions conditions) {
 }
 
 
+// Obtain subject code from the course code
 string Course::get_extracted_subject_code() {
     // For 3 character subject codes i.e. CIS*1300
     if (code[3] == '*') {
