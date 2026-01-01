@@ -1,12 +1,11 @@
 #include "../include/header.h"
 /*
 TODO:
-1. Turn Course into a class, with methods for some of the existing functionality.
 2. Turn the calculator functionality into a class.
 3. Create instances of the Courses and the Calculator in a runner file, and call them from there.
 */
 
-int read_from_file(char * file_name, vector<Course> &courses) {
+int Calculator::load_courses_from_file(char * file_name) {
     string line;
     ifstream fp(file_name);
 
@@ -50,7 +49,7 @@ int read_from_file(char * file_name, vector<Course> &courses) {
 
 
 // Obtains the grade by course code
-int get_grade_by_course_code(string course_code, vector<Course> &courses) {
+int Calculator::get_grade_by_course_code(string course_code) {
     int mark, i;
 
     mark = -1;
@@ -70,7 +69,7 @@ int get_grade_by_course_code(string course_code, vector<Course> &courses) {
 }
 
 // Computes the GPA based on conditions provided
-float compute_gpa(vector<Course> &courses, Course_Conditions conditions) {
+float Calculator::compute_gpa(Course_Conditions conditions) {
     float gpa = 0;
     int n_courses = courses.size();
     float total_weightage = 0; // courses that validate the specified conditions
@@ -88,95 +87,17 @@ float compute_gpa(vector<Course> &courses, Course_Conditions conditions) {
 }
 
 // Computes the GPA for a specific course subject type (i.e. Mathematics)
-float compute_subject_gpa(string subject_code, vector<Course> &courses) {
+float Calculator::compute_subject_gpa(string subject_code) {
     Course_Conditions conditions;
     conditions.subject = subject_code;
 
-    return compute_gpa(courses, conditions);
+    return compute_gpa(conditions);
 }
 
 // Computes semester GPA
-float compute_semester_gpa(string semester_code, vector<Course> &courses) {
+float Calculator::compute_semester_gpa(string semester_code) {
     Course_Conditions conditions;
     conditions.semester = semester_code;
 
-    return compute_gpa(courses, conditions);
-}
-
-// Accepts menu options and runs program functions
-void run_menu_options(vector<Course> &courses) {
-    // Create input loop for GPA analysis
-    string input;
-
-    while (strcmp(input.c_str(), "q") != 0) {
-        cout << "Menu Options: s (search), c (compute cGPA), cs (compute GPA by subject), ce (compute GPA by semester), q (quit)\n";
-        cout << ">> ";
-        cin >> input;
-
-        if (strcmp(input.c_str(), "s") == 0) {
-            string course_code;
-            int course_mark;
-
-            cout << "Enter a course code (i.e. CIS*1300): ";
-            cin >> course_code;
-            cout << "\n";
-
-            course_mark = get_grade_by_course_code(course_code, courses);
-
-            // Input validation
-            if (course_mark < 0) {
-                cout << "The course with the code '" << course_code << "', does not exist. No mark was retrieved.\n";
-            } else {
-                cout << course_mark << "%\n";
-            }
-        } else if (strcmp(input.c_str(), "c") == 0) {
-            float cgpa;
-            Course_Conditions conditions;
-
-            cgpa = compute_gpa(courses, conditions);
-
-            cout << "The student's cGPA is: " << fixed << setprecision(2) << cgpa << "%.\n";
-        } else if (strcmp(input.c_str(), "cs") == 0) {
-            string subject_code;
-            float gpa;
-
-            cout << "Enter a subject code (i.e. 'MATH'): ";
-            cin >> subject_code;
-
-            gpa = compute_subject_gpa(subject_code, courses);
-            cout << "The student's subject specific GPA for '" << subject_code << "' courses is: " << fixed << setprecision(2) << gpa << "%.\n";
-        } else if (strcmp(input.c_str(), "ce") == 0) {
-            string semester_code;
-            float gpa;
-
-            cout << "Enter a semester code (i.e. F25): ";
-            cin >> semester_code;
-
-            gpa = compute_semester_gpa(semester_code, courses);
-            cout << "The student's " << semester_code << " semester GPA is: " << fixed << setprecision(2) << gpa << "%.\n";
-        } else {
-            if (strcmp(input.c_str(), "q") != 0) {
-                cout << "Invalid option entered.\n";
-            }
-        }
-    }
-}
-
-int main(int argc, char* argv[]) {
-    cout << "Loading... " << argv[1] << "\n";
-
-    // Create vector of all the structs of file information
-    vector<Course> courses;
-
-    if (read_from_file(argv[1], courses) != 0) {
-        cout << "There was an error reading the file, '" << argv[1] << "'. Please check if it exists or if it is in the proper (CSV) format.\n";
-    }
-
-    cout << "File loaded and ready for analysis.\n";
-
-    run_menu_options(courses);
-
-    cout << "Exited program.\n";
-
-    return 0;
+    return compute_gpa(conditions);
 }
